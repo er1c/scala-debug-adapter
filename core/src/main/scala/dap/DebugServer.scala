@@ -1,15 +1,12 @@
 package dap
 
-import java.net.{ServerSocket, URI}
-
-import bloop.io.ServerHandle
+import java.net.{InetAddress, InetSocketAddress, ServerSocket, URI}
 import bloop.logging.Logger
 import com.microsoft.java.debug.core.DebugSettings
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.execution.atomic.AtomicBoolean
 import monix.execution.cancelables.CompositeCancelable
-
 import scala.concurrent.Promise
 
 final class StartedDebugServer(
@@ -18,6 +15,19 @@ final class StartedDebugServer(
 )
 
 object DebugServer {
+  private final case class Tcp(address: InetSocketAddress, backlog: Int) {
+    val server: ServerSocket = new ServerSocket(address.getPort, backlog, address.getAddress)
+    def uri: URI = URI.create(s"tcp://${address.getHostString}:${server.getLocalPort}")
+    override def toString: String = s"${address.getHostString}:${server.getLocalPort}"
+  }
+
+  private object Tcp {
+    def apply(): Tcp = Tcp(new InetSocketAddress(0), 10)
+    def apply(backlog: Int): Tcp = Tcp(new InetSocketAddress(0), backlog)
+    def apply(address: InetAddress, port: Int, backlog: Int): Tcp = {
+      Tcp(new InetSocketAddress(address, port), backlog)
+    }
+  }
 
   /**
    * Disable evaluation of variable's `toString` methods
@@ -42,7 +52,7 @@ object DebugServer {
      * which can happen when a restart is request and the client immediately
      * connects without waiting for the other session to finish.
      */
-    val handle = ServerHandle.Tcp(backlog = 1)
+    val handle = Tcp(backlog = 1)
 
     val closedServer = AtomicBoolean(false)
     val listeningPromise = Promise[Option[URI]]()
