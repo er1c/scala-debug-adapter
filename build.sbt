@@ -12,6 +12,7 @@ lazy val core = project
     name := "scala-debug-adapter",
     libraryDependencies ++= List(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+      "com.lihaoyi" %% "pprint" % "0.5.3",
       Dependencies.asm,
       Dependencies.asmUtil,
       Dependencies.bsp4j,
