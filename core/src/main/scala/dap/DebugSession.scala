@@ -5,7 +5,6 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import java.util.logging.{Handler, Level, LogRecord, Logger => JLogger}
 import bloop.logging.{DebugFilter, Logger}
-import bloop.cli.{ExitStatus => DebuggeeExitStatus}
 import com.microsoft.java.debug.core.adapter.{ProtocolServer => DapServer}
 import com.microsoft.java.debug.core.protocol.Messages.{Request, Response}
 import com.microsoft.java.debug.core.protocol.Requests._
@@ -88,7 +87,7 @@ final class DebugSession(
           }
         }
 
-        def cancelIfError(exitStatus: DebuggeeExitStatus): Unit = {
+        def cancelIfError(exitStatus: ExitStatus): Unit = {
           if (!exitStatus.isOk) {
             cancelPromises(new Exception(exitStatus.name))
           }

@@ -1,6 +1,5 @@
 package dap
 
-import bloop.cli.ExitStatus
 //import bloop.data.{Platform, Project}
 //import bloop.engine.State
 //import bloop.engine.tasks.{RunMode, Tasks}
@@ -9,105 +8,19 @@ import bloop.cli.ExitStatus
 //import ch.epfl.scala.bsp.ScalaMainClass
 import monix.eval.Task
 import java.nio.file.Path
-//import xsbti.compile.analysis.SourceInfo
-//import sbt.internal.inc.Analysis
 import bloop.logging.Logger
-//
+
 abstract class DebuggeeRunner {
   def logger: Logger
   def run(logger: DebugSessionLogger): Task[ExitStatus]
   def classFilesMappedTo(origin: Path, lines: Array[Int], columns: Array[Int]): List[Path]
 }
+
+
+
+
 //
-//private final class MainClassDebugAdapter(
-//    project: Project,
-//    mainClass: ScalaMainClass,
-//    env: JdkConfig,
-//    state: State
-//) extends DebuggeeRunner {
-//  private lazy val allAnalysis = state.results.allAnalysis
-//  def classFilesMappedTo(
-//      origin: Path,
-//      lines: Array[Int],
-//      columns: Array[Int]
-//  ): List[Path] = {
-//    DebuggeeRunner.classFilesMappedTo(origin, lines, columns, allAnalysis)
-//  }
-//
-//  def logger: Logger = {
-//    state.logger
-//  }
-//
-//  def run(debugLogger: DebugSessionLogger): Task[ExitStatus] = {
-//    val workingDir = state.commonOptions.workingPath
-//    val runState = Tasks.runJVM(
-//      state.copy(logger = debugLogger),
-//      project,
-//      env,
-//      workingDir,
-//      mainClass.`class`,
-//      (mainClass.arguments ++ mainClass.jvmOptions).toArray,
-//      skipJargs = false,
-//      mainClass.environmentVariables,
-//      RunMode.Debug
-//    )
-//
-//    runState.map(_.status)
-//  }
-//}
-//
-//private final class TestSuiteDebugAdapter(
-//    projects: Seq[Project],
-//    filters: List[String],
-//    state: State
-//) extends DebuggeeRunner {
-//  private lazy val allAnalysis = state.results.allAnalysis
-//  def classFilesMappedTo(
-//      origin: Path,
-//      lines: Array[Int],
-//      columns: Array[Int]
-//  ): List[Path] = {
-//    DebuggeeRunner.classFilesMappedTo(origin, lines, columns, allAnalysis)
-//  }
-//
-//  def logger: Logger = {
-//    state.logger
-//  }
-//
-//  def run(debugLogger: DebugSessionLogger): Task[ExitStatus] = {
-//    val debugState = state.copy(logger = debugLogger)
-//
-//    val filter = TestInternals.parseFilters(filters)
-//    val handler = new LoggingEventHandler(debugState.logger)
-//
-//    val task = Tasks.test(
-//      debugState,
-//      projects.toList,
-//      Nil,
-//      filter,
-//      handler,
-//      runInParallel = false,
-//      mode = RunMode.Debug
-//    )
-//
-//    task.map(_.status)
-//  }
-//}
-//
-//private final class AttachRemoteDebugAdapter(state: State) extends DebuggeeRunner {
-//  private lazy val allAnalysis = state.results.allAnalysis
-//  override def logger: Logger = state.logger
-//
-//  override def run(logger: DebugSessionLogger): Task[ExitStatus] = Task(ExitStatus.Ok)
-//
-//  override def classFilesMappedTo(
-//      origin: Path,
-//      lines: Array[Int],
-//      columns: Array[Int]
-//  ): List[Path] = {
-//    DebuggeeRunner.classFilesMappedTo(origin, lines, columns, allAnalysis)
-//  }
-//}
+
 //
 //object DebuggeeRunner {
 //  def forMainClass(

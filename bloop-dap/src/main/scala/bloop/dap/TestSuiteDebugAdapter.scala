@@ -1,15 +1,16 @@
-package sbtdap
+package bloop.dap
 
-//import bloop.data.{Platform, Project}
-//import bloop.engine.State
-//import bloop.engine.tasks.{RunMode, Tasks}
-//import bloop.data.JdkConfig
-//import bloop.testing.{LoggingEventHandler, TestInternals}
-import bloop.logging.Logger
-import dap.DebuggeeRunner
-import java.nio.file.Path
+import bloop.data.{Platform, Project}
+import bloop.engine.State
+import bloop.engine.tasks.{RunMode, Tasks}
+import bloop.data.JdkConfig
+import bloop.testing.{LoggingEventHandler, TestInternals}
+import ch.epfl.scala.bsp.ScalaMainClass
 import monix.eval.Task
-import sbt.{Project, State}
+import java.nio.file.Path
+import xsbti.compile.analysis.SourceInfo
+import sbt.internal.inc.Analysis
+import bloop.logging.Logger
 
 private final class TestSuiteDebugAdapter(
     projects: Seq[Project],
