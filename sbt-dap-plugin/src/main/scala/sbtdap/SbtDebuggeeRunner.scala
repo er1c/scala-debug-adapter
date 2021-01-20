@@ -1,17 +1,17 @@
 package sbtdap
 
 import dap.{Logger => DapLogger, _}
-
 import java.nio.file.Path
-import sbt.{Project, State}
+import sbt.{Def, ForkOptions, ForkRun, Keys, Project, State, Task}
 import sbt.internal.bsp
-
 import scala.util.{Failure, Success}
 import sjsonnew.JsonFormat
 import sjsonnew.support.scalajson.unsafe.Converter
 import sjsonnew.shaded.scalajson.ast.unsafe.JValue
-
 import java.net.URI
+import sbt.internal.bsp.{RunResult, ScalaMainClass, StatusCode}
+import sbt.internal.server.ServerCallback
+import sbt.internal.util.Attributed
 import scala.concurrent.Future
 
 
@@ -90,7 +90,7 @@ object SbtDebuggeeRunner {
 }
 
 private trait SbtDebuggeeRunner extends DebuggeeRunner {
-  def projects: Seq[Project]
+  //def callback: ServerCallback
   def state: State
 
   final def getURI: URI = ???
@@ -108,28 +108,38 @@ private trait SbtDebuggeeRunner extends DebuggeeRunner {
   }
 }
 
+// originId: Option[String]
 private final case class MainClassSbtDebuggeeRunner(
   projects: Seq[Project],
   state: State,
   mainClass: bsp.ScalaMainClass
 ) extends SbtDebuggeeRunner {
 
-  override def run(callbacks: DebugSessionCallbacks): Cancelable = {
-    //    val workingDir = state.commonOptions.workingPath
-    //    val runState = Tasks.runJVM(
-    //      state.copy(logger = debugLogger),
-    //      project,
-    //      env,
-    //      workingDir,
-    //      mainClass.`class`,
-    //      (mainClass.arguments ++ mainClass.jvmOptions).toArray,
-    //      skipJargs = false,
-    //      mainClass.environmentVariables,
-    //      RunMode.Debug
-    //    )
-    //
-    //    runState.map(_.status)
-    ???
+
+  override def run(callbacks: DebugSessionCallbacks): CancelableFuture[Unit] = Def.task {
+    val state = Keys.state.value
+    val logger = Keys.streams.value.log
+    val classpath = Attributed.data(Keys.fullClasspath.value)
+    val forkOpts = ForkOptions(
+      javaHome = Keys.javaHome.value,
+      outputStrategy = Keys.outputStrategy.value,
+      // bootJars is empty by default because only jars on the user's classpath should be on the boot classpath
+      bootJars = Vector(),
+      workingDirectory = Some(Keys.baseDirectory.value),
+      runJVMOptions = mainClass.jvmOptions,
+      connectInput = Keys.connectInput.value,
+      envVars = Keys.envVars.value
+    )
+    val runner = new ForkRun(forkOpts)
+    val statusCode = runner
+      .run(mainClass.`class`, classpath, mainClass.arguments, logger)
+      .fold(
+        _ => StatusCode.Error,
+        _ => StatusCode.Success
+      )
+    //callbacks.onFinish()
+    //state.respondEvent(RunResult(originId, statusCode))
+
   }
 }
 
@@ -139,23 +149,13 @@ private final case class TestSuiteSbtDebuggeeRunner(
   filters: List[String]
 ) extends SbtDebuggeeRunner {
 
-  override def run(callbacks: DebugSessionCallbacks): Cancelable = {
-    //    val debugState = state.copy(logger = debugLogger)
-    //
-    //    val filter = TestInternals.parseFilters(filters)
-    //    val handler = new LoggingEventHandler(debugState.logger)
-    //
-    //    val task = Tasks.test(
-    //      debugState,
-    //      projects.toList,
-    //      Nil,
-    //      filter,
-    //      handler,
-    //      runInParallel = false,
-    //      mode = RunMode.Debug
-    //    )
-    //
-    //    task.map(_.status)
+  override def run(callbacks: DebugSessionCallbacks): CancelableFuture[Unit] = {
+/*
+          case r: JsonRpcRequestMessage if r.method == "buildTarget/test" =>
+            val task = bspBuildTargetTest.key
+            val paramStr = CompactPrinter(json(r))
+            val _ = callback.appendExec(s"$task $paramStr", Some(r.id))
+ */
     ???
   }
 }
@@ -163,6 +163,5 @@ private final case class TestSuiteSbtDebuggeeRunner(
 private final case class AttachRemoteSbtDebuggeeRunner(
   state: State
 ) extends SbtDebuggeeRunner {
-  override def projects: Seq[Project] = Nil
-  override def run(callbacks: DebugSessionCallbacks): Cancelable = ???
+  override def run(callbacks: DebugSessionCallbacks): CancelableFuture[Unit] = ???
 }

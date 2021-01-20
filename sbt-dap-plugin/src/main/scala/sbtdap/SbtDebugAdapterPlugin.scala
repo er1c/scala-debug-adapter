@@ -1,15 +1,12 @@
 package sbtdap
 
-import sbt.{Keys, Project, State}
+import sbt.{Def, Keys, Project, State}
 import sbt.internal.server.{ServerCallback, ServerHandler, ServerIntent}
 import com.google.gson.{Gson, GsonBuilder}
 import sjsonnew.support.scalajson.unsafe.Converter
-import dap.DebuggeeRunner
 import sbt.internal.bsp._
 import sbt.internal.protocol.JsonRpcRequestMessage
-import sbt.internal.langserver.ErrorCodes
 import sjsonnew.shaded.scalajson.ast.unsafe.JValue
-
 import scala.util.{Failure, Success}
 
 object SbtDebugAdapterPlugin extends sbt.AutoPlugin {
@@ -22,7 +19,7 @@ object SbtDebugAdapterPlugin extends sbt.AutoPlugin {
       ServerIntent.request {
         case r: JsonRpcRequestMessage if r.method == "debugSession/start" => {
           import sbt.internal.bsp.codec.DebugAdapterJsonProtocol._
-
+          //val state = Keys.state.value
           handleDebugSessionStart(r, ???, ???) match {
             case Left(protoError) => jsonRpcRespondError(Some(r.id), protoError.code, protoError.message)
             case Right(debugAddress) => jsonRpcRespond(debugAddress, Some(r.id))
@@ -32,6 +29,9 @@ object SbtDebugAdapterPlugin extends sbt.AutoPlugin {
       }
     }
   )
+
+  //lazy val globalSettings: Seq[Def.Setting[_]] = Seq(
+  //)
 
   private def handleDebugSessionStart(
     r: JsonRpcRequestMessage,
@@ -58,7 +58,14 @@ object SbtDebugAdapterPlugin extends sbt.AutoPlugin {
     }
   }
 
-  object autoImport
+
+
+  // bspBuildTargetRun := bspRunTask.evaluated,
+  // bspScalaMainClasses
+  // bspScalaTestClasses
+  // bspBuildTargetTest
+  //val command = Keys.bspScalaMainClasses.key
+  object autoImport extends PluginKeys
 
   private implicit class FilterableEither[E, T](val x: Either[E, T]) extends AnyVal {
     def withFilter(p: T => Boolean): Either[E, T] = x
